@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import random
 import os
 from flask import Flask
@@ -25,23 +26,26 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# === Sync Slash Commands ===
+# === Slash Command Sync ===
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     print(f"Logged in as {bot.user}")
 
 # === /pfp ===
-@bot.tree.command(name="pfp", description="Get your profile picture")
-async def pfp(interaction: discord.Interaction):
-    await interaction.response.send_message(interaction.user.avatar.url)
+@bot.tree.command(name="pfp", description="Get someone's profile picture")
+@app_commands.describe(user="The user to get the profile picture of")
+async def pfp(interaction: discord.Interaction, user: discord.User = None):
+    if user is None:
+        user = interaction.user
+    await interaction.response.send_message(f"{user.display_name}'s PFP: {user.avatar.url}")
 
 # === /dns ===
 @bot.tree.command(name="dns", description="Get the DNS config file")
 async def dns(interaction: discord.Interaction):
     await interaction.response.send_message("Here’s the DNS: https://cdn.discordapp.com/attachments/1376994219649929388/1398794767084683274/Neb_DNS__Webclip.mobileconfig")
 
-# === /chocomilky app ===
+# === /chocomilky_app ===
 @bot.tree.command(name="chocomilky_app", description="Get the Choco Milky App")
 async def chocomilky(interaction: discord.Interaction):
     await interaction.response.send_message("Here’s the Choco Milky App: https://cdn.discordapp.com/attachments/1373569891994697888/1378195101104476232/choco_milky_app.mobileconfig")
@@ -60,6 +64,7 @@ async def diceroll(interaction: discord.Interaction):
 
 # === /8ball ===
 @bot.tree.command(name="8ball", description="Ask the 8-ball a question")
+@app_commands.describe(question="Ask a question")
 async def eightball(interaction: discord.Interaction, question: str):
     responses = [
         "Yes", "No", "Maybe", "Ask again later", "Definitely", "Absolutely not"
@@ -69,6 +74,7 @@ async def eightball(interaction: discord.Interaction, question: str):
 
 # === /math ===
 @bot.tree.command(name="math", description="Solve a math problem")
+@app_commands.describe(question="Enter a math expression like 3+3*2")
 async def math(interaction: discord.Interaction, question: str):
     try:
         answer = eval(question)
@@ -88,6 +94,7 @@ async def joke(interaction: discord.Interaction):
 
 # === /kick ===
 @bot.tree.command(name="kick", description="Kick a member")
+@app_commands.describe(member="Who to kick", reason="Why?")
 @commands.has_permissions(kick_members=True)
 async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
     await member.kick(reason=reason)
@@ -95,12 +102,13 @@ async def kick(interaction: discord.Interaction, member: discord.Member, reason:
 
 # === /ban ===
 @bot.tree.command(name="ban", description="Ban a member")
+@app_commands.describe(member="Who to ban", reason="Why?")
 @commands.has_permissions(ban_members=True)
 async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
     await member.ban(reason=reason)
     await interaction.response.send_message(f"Banned {member.mention} for: {reason}")
 
-# === Error Handling ===
+# === Error Logging ===
 @bot.event
 async def on_command_error(ctx, error):
     print(f"Error: {error}")
