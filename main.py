@@ -32,6 +32,16 @@ async def on_ready():
     await bot.tree.sync()
     print(f"Logged in as {bot.user}")
 
+# === Start web server and run bot ===
+keep_alive()
+
+TOKEN = os.getenv('DISCORD_TOKEN')
+if TOKEN is None:
+    raise ValueError("No Discord token found in environment variables!")
+
+bot.run(TOKEN)
+
+
 # === /pfp ===
 @bot.tree.command(name="pfp", description="Get someone's profile picture")
 @app_commands.describe(user="The user to get the profile picture of")
